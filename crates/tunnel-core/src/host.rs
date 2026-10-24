@@ -388,6 +388,7 @@ fn mac_bundle_executable(app: &str) -> Option<PathBuf> {
     None
 }
 
+#[cfg(target_os = "macos")]
 struct TerminalTarget {
     id: &'static str,
     label: &'static str,
@@ -471,10 +472,12 @@ const WINDOWS_TARGETS: &[(&str, &str, &str)] = &[
     ("powershell", "PowerShell", "powershell.exe"),
 ];
 
+#[cfg(target_os = "macos")]
 fn applescript_string(value: &str) -> String {
     format!("\"{}\"", value.replace('\\', "\\\\").replace('"', "\\\""))
 }
 
+#[cfg(target_os = "macos")]
 fn shell_single_quoted(value: &str) -> String {
     format!("'{}'", value.replace('\'', "'\\''"))
 }
@@ -624,7 +627,7 @@ impl TerminalPort for OsTerminal {
         #[cfg(target_os = "linux")]
         {
             let platform = "linux";
-            return LINUX_TARGETS
+            LINUX_TARGETS
                 .iter()
                 .filter(|(id, _, cmd)| {
                     let _ = id;
@@ -636,12 +639,12 @@ impl TerminalPort for OsTerminal {
                     hint: (*hint).into(),
                     platform: platform.into(),
                 })
-                .collect();
+                .collect()
         }
         #[cfg(windows)]
         {
             let platform = "win32";
-            return WINDOWS_TARGETS
+            WINDOWS_TARGETS
                 .iter()
                 .filter(|(_, _, cmd)| which_on_path(cmd).is_some())
                 .map(|(id, label, hint)| TerminalInfo {
@@ -650,7 +653,7 @@ impl TerminalPort for OsTerminal {
                     hint: (*hint).into(),
                     platform: platform.into(),
                 })
-                .collect();
+                .collect()
         }
         #[cfg(not(any(target_os = "macos", target_os = "linux", windows)))]
         {
