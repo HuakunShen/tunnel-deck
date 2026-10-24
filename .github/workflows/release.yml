@@ -160,6 +160,12 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
+      # The feed script lives in the repo, not in the artifacts.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+          sparse-checkout-cone-mode: false
+
       # One release, every platform: each bundle job uploads to the same tag, so
       # the download page lists arm64 and x64 side by side instead of two
       # releases fighting over one name.
