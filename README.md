@@ -27,6 +27,10 @@ install) plus the Web UI: installing the app is all it takes. (`node` v20 or
 newer is only needed for the npm CLI/TUI line, never for the app.) On macOS,
 keep `ssh`'s own config it already reads.
 
+Updates are signed and in-app: Settings → Check for updates installs the new
+release and relaunches. Every tag builds all four platforms on GitHub Actions
+with the update feed (`latest.json`) rendered at publish time, never by hand.
+
 Windows note: OpenSSH there has no `ControlMaster`, so a tunnel started in the
 app is owned by its process id rather than by a control socket. Everything the
 UI does still works; only the "someone else's terminal holds it" detection falls
