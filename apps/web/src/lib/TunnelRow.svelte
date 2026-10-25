@@ -210,13 +210,20 @@
   </div>
 
   <div class="row-actions shrink-0">
-    {#if live}
-      <button class="toolbar-button" disabled={busy} aria-busy={busy} onclick={() => onStop(profile.id)} title="Stop tunnel">
-        {#if busy}<LoaderCircle size={13} class="animate-spin" />{:else}<CircleStop size={13} />{/if} Stop
+    {#if status === "starting" || status === "stopping"}
+      {#key status}
+        <button class="toolbar-button" disabled aria-busy="true" title="Working…">
+          <LoaderCircle size={13} class="animate-spin" />
+          {status === "starting" ? "Starting…" : "Stopping…"}
+        </button>
+      {/key}
+    {:else if live}
+      <button class="toolbar-button" disabled={busy} onclick={() => onStop(profile.id)} title="Stop tunnel">
+        <CircleStop size={13} /> Stop
       </button>
     {:else}
-      <button class="toolbar-button" disabled={busy} aria-busy={busy} onclick={() => onStart(profile.id)} title="Start tunnel">
-        {#if busy}<LoaderCircle size={13} class="animate-spin" />{:else}<Play size={13} />{/if} Start
+      <button class="toolbar-button" disabled={busy} onclick={() => onStart(profile.id)} title="Start tunnel">
+        <Play size={13} /> Start
       </button>
     {/if}
 
@@ -242,8 +249,8 @@
       {#if endpointCopied}<Check size={14} />{:else}<Link size={14} />{/if}
     </button>
 
-    <button class="toolbar-icon" disabled={busy} onclick={() => onProbe(profile.id)} title="Probe forwarded ports" aria-label="Probe forwarded ports">
-      <FlaskConical size={14} />
+    <button class="toolbar-icon" disabled={busy} aria-busy={busy} onclick={() => onProbe(profile.id)} title="Probe forwarded ports" aria-label="Probe forwarded ports">
+      {#if busy}<LoaderCircle size={14} class="animate-spin" />{:else}<FlaskConical size={14} />{/if}
     </button>
 
     <div class="relative">

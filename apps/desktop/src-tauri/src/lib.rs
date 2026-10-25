@@ -20,6 +20,14 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            // A second launch is always a mistake (a rival manager over the
+            // same ports and sockets), so surface the running window instead.
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
         .manage(tunnel_commands::app_state());
     let builder = if std::env::var("SSH_TUNNEL_WEBDRIVER").is_ok() {
         builder.plugin(tauri_plugin_wdio_webdriver::init())

@@ -33,6 +33,10 @@ tauri-plugin-updater = "2"
 # Relaunch after an update install. Same split as upstream: the page calls it,
 # the shell only permits it.
 tauri-plugin-process = "2"
+# Exactly one manager may own these tunnels: a second launch focuses the
+# running window instead of starting a rival manager over the same ports and
+# control sockets.
+tauri-plugin-single-instance = "2"
 # Embedded WebDriver server for `pnpm test:e2e` (WebdriverIO, embedded
 # provider). Release-only surface: debug builds skip it via cfg below.
 tauri-plugin-wdio-webdriver = "1.5.0"

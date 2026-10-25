@@ -34,6 +34,14 @@ pub struct ProbeOutcome {
 /// TCP dial with timeout; resolves ok/latency, never throws for refuse.
 pub trait ProbePort: Send {
     fn dial_tcp(&self, host: &str, port: u16, timeout_ms: u64) -> ProbeOutcome;
+
+    /// Whether something already listens on this bind port. A dial that
+    /// answers is the only honest signal, so the default implementation is
+    /// just that — but it is its own question, because health probes and the
+    /// pre-start bind check read the same answer to opposite conclusions.
+    fn port_held(&self, host: &str, port: u16) -> bool {
+        self.dial_tcp(host, port, 400).ok
+    }
 }
 
 pub trait StorePort: Send {

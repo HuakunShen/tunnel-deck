@@ -796,6 +796,38 @@ where
             id,
             &format!("--- starting {} ---", self.clock.now_iso()),
         );
+        // Fail fast with a human message when the bind port is already held —
+        // by an orphan ssh, a second app instance, or an unrelated service.
+        // Without this, ssh dies on `Address already in use` mid-startup and
+        // the failure reads as a connection problem, which it is not.
+        for rule in &profile.forwards {
+            let (bind_address, bind_port) = match rule {
+                ForwardRule::Remote { .. } => continue,
+                ForwardRule::Local {
+                    bind_address,
+                    bind_port,
+                    ..
+                }
+                | ForwardRule::Dynamic {
+                    bind_address,
+                    bind_port,
+                } => (bind_address, *bind_port),
+            };
+            let host = match bind_address.as_deref().unwrap_or("") {
+                "" | "*" | "0.0.0.0" => "127.0.0.1",
+                other => other,
+            };
+            if self.prober.port_held(host, bind_port) {
+                self.set_status(id, TunnelStatus::Failed, |s| {
+                    s.last_error = Some(format!(
+                        "local port {bind_port} is already in use — another tunnel, a leftover ssh, or another app may hold it; free it and start again"
+                    ));
+                })?;
+                return self.states.get(id).cloned().ok_or_else(|| {
+                    TunnelError::new(TunnelProblemCode::InternalError, "state lost during start")
+                });
+            }
+        }
         let control_path = self.handoff_control_path(id);
         let built = build_ssh_argv(
             &profile,
@@ -971,9 +1003,12 @@ where
             self.process.kill_tree(pid);
             std::thread::sleep(Duration::from_millis(1200));
         }
+        // A stop is the user declaring the red text handled: the next glance
+        // at the row must not show yesterday's failure as today's state.
         self.set_status(id, TunnelStatus::Stopped, |s| {
             s.pid = None;
             s.started_at = None;
+            s.last_error = None;
         })?;
         // The master is gone, so its socket file must go too — otherwise the
         // next start finds a stale file and runs without multiplexing.
@@ -1264,7 +1299,11 @@ mod tests {
         }
     }
 
-    struct FakeProbe;
+    /// Ports the fake claims are held — everything else refuses. Empty by
+    /// default, so plain lifecycle tests never trip the pre-start port check.
+    struct FakeProbe {
+        open: Vec<u16>,
+    }
 
     impl ProbePort for FakeProbe {
         fn dial_tcp(&self, _host: &str, _port: u16, _timeout_ms: u64) -> ProbeOutcome {
@@ -1273,6 +1312,10 @@ mod tests {
                 latency_ms: Some(1),
                 detail: None,
             }
+        }
+
+        fn port_held(&self, _host: &str, port: u16) -> bool {
+            self.open.contains(&port)
         }
     }
 
@@ -1390,6 +1433,7 @@ mod tests {
             PathBuf::from("/tmp/ssh-tunnel-test-logs"),
             PathBuf::from("/tmp/ssh-tunnel-test-control"),
             false,
+            Vec::new(),
         )
     }
 
@@ -1398,6 +1442,7 @@ mod tests {
         log_dir: PathBuf,
         control_dir: PathBuf,
         socket_alive: bool,
+        held_ports: Vec<u16>,
     ) -> Manager<
         FakeProcess,
         FakeProbe,
@@ -1415,7 +1460,7 @@ mod tests {
                 spawned: Vec::new(),
                 killed: Vec::new(),
             },
-            FakeProbe,
+            FakeProbe { open: held_ports },
             FakeStore::default(),
             FakeClock,
             FakeRuntime::default(),
@@ -1484,7 +1529,7 @@ mod tests {
         let base = std::env::temp_dir().join(format!("ssh-tunnel-reclaim-{}", std::process::id()));
         let control_dir = base.join("control");
         std::fs::create_dir_all(&control_dir).unwrap();
-        let mut manager = manager_in(base.join("logs"), control_dir.clone(), false);
+        let mut manager = manager_in(base.join("logs"), control_dir.clone(), false, Vec::new());
         let created = manager.create_profile(input()).unwrap();
         // A dead master left its file behind; the socket answers nothing.
         let socket = control_dir.join(format!("{}.sock", created.id));
@@ -1507,7 +1552,7 @@ mod tests {
         let base = std::env::temp_dir().join(format!("ssh-tunnel-steal-{}", std::process::id()));
         let control_dir = base.join("control");
         std::fs::create_dir_all(&control_dir).unwrap();
-        let mut manager = manager_in(base.join("logs"), control_dir.clone(), true);
+        let mut manager = manager_in(base.join("logs"), control_dir.clone(), true, Vec::new());
         let created = manager.create_profile(input()).unwrap();
         let socket = control_dir.join(format!("{}.sock", created.id));
         std::fs::write(&socket, "live").unwrap();
@@ -1519,6 +1564,49 @@ mod tests {
         assert!(matches!(result, Err(e) if e.code == TunnelProblemCode::Conflict));
         assert!(socket.exists(), "a live socket must survive");
         std::fs::remove_dir_all(&base).unwrap();
+    }
+
+    #[test]
+    fn held_bind_port_fails_fast_with_a_human_message() {
+        let base = std::env::temp_dir().join(format!("ssh-tunnel-held-{}", std::process::id()));
+        // Port 18099 is the fixture profile's bind port; something already
+        // holds it (an orphan ssh, a second instance), so ssh would die on
+        // `Address already in use` — say so up front instead.
+        let mut manager = manager_in(base.join("logs"), base.join("control"), false, vec![18099]);
+        let created = manager.create_profile(input()).unwrap();
+        // Like every other substantive start failure in this manager (spawn
+        // refused, early exit), a held port answers Ok with a failed state —
+        // only illegal transitions throw.
+        let state = manager.start(&created.id).unwrap();
+        assert_eq!(state.status, TunnelStatus::Failed);
+        assert!(
+            state
+                .last_error
+                .as_ref()
+                .is_some_and(|message| message.contains("already in use")),
+            "unexpected message: {:?}",
+            state.last_error
+        );
+        std::fs::remove_dir_all(&base).unwrap();
+    }
+
+    #[test]
+    fn stop_clears_a_previous_failure() {
+        let mut manager = manager();
+        let created = manager.create_profile(input()).unwrap();
+        // Simulate yesterday's red text surviving on a live row: the failure
+        // predates this run, and stop is the user declaring it handled.
+        manager
+            .set_status(&created.id, TunnelStatus::Starting, |_| {})
+            .unwrap();
+        manager
+            .set_status(&created.id, TunnelStatus::Running, |s| {
+                s.last_error = Some("old failure".into());
+            })
+            .unwrap();
+        let stopped = manager.stop(&created.id).unwrap();
+        assert_eq!(stopped.status, TunnelStatus::Stopped);
+        assert_eq!(stopped.last_error, None);
     }
 
     #[test]
