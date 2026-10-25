@@ -32,6 +32,9 @@ declare global {
     __TAURI_INTERNALS__?: {
       invoke: <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
     };
+    __nativeHost?: {
+      apply: (backdrop: string) => void;
+    };
   }
 }
 

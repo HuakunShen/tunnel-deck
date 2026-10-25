@@ -67,7 +67,7 @@
 
   onMount(() => {
     applyOpacity(readOpacity());
-    const host = (window as unknown as { __nativeHost?: { apply: (b: string) => void } }).__nativeHost;
+    const host = window.__nativeHost;
     if (host !== undefined) {
       hasMaterial = document.documentElement.dataset.backdrop === "glass"
         || document.documentElement.dataset.backdrop === "vibrancy";
@@ -110,6 +110,9 @@
   async function refresh(): Promise<void> {
     const wasConnected = store.connected;
     store = await refreshAll(store);
+    // Pending rows keep their optimistic status: a poll that was already on
+    // the wire returns pre-click truth and must not wipe mid-action feedback.
+    applyPending();
     // Hosts and terminals are one-shot reads, not part of the poll: re-read
     // them when the daemon appears. The desktop shell loads the page before
     // the sidecar answers, so without this the sidebar stays empty until the
@@ -128,11 +131,78 @@
   }
 
   /**
-   * Run one row action with immediate feedback. The backend blocks (the ssh
-   * grace window on start, the kill grace on stop), so the row is patched to
-   * `optimistic` up front — otherwise the button just sits disabled for
-   * seconds and the action reads as frozen. The poll and the final refresh
-   * overwrite it with the truth either way.
+   * Rows with a command in flight. A poll that was already on the wire when
+   * the user clicked returns pre-click truth and would wipe the optimistic
+   * row back to `running` mid-action — the exact "flashed then stuck" the
+   * pending map exists to prevent. Entries expire (see `pendingTtlMs`), so a
+   * hung command wedges the row for seconds, never forever.
+   */
+  interface PendingAction {
+    status: TunnelStatus;
+    until: number;
+  }
+  let pending = $state(new Map<string, PendingAction>());
+
+  /** Dead-man switch for one row action. Overridable with `?pendingTtlMs=` in tests. */
+  function pendingTtlMs(): number {
+    try {
+      const raw = new URLSearchParams(window.location.search).get("pendingTtlMs");
+      const parsed = raw === null ? NaN : Number(raw);
+      if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    } catch {
+      // Non-browser (prerender): fall through to the default.
+    }
+    return 45_000;
+  }
+
+  function patchRowStatus(id: string, status: TunnelStatus): void {
+    store = {
+      ...store,
+      states: store.states.map((s) =>
+        s.profileId === id ? { ...s, status } : s,
+      ),
+    };
+  }
+
+  function setPending(id: string, status: TunnelStatus | null): void {
+    const next = new Map(pending);
+    if (status === null) {
+      next.delete(id);
+    } else {
+      next.set(id, { status, until: Date.now() + pendingTtlMs() });
+      patchRowStatus(id, status);
+    }
+    pending = next;
+  }
+
+  /** Re-assert pending rows after every poll; drop expired entries first. */
+  function applyPending(): void {
+    if (pending.size === 0) return;
+    const now = Date.now();
+    let next: Map<string, PendingAction> | null = null;
+    for (const [id, action] of pending) {
+      if (action.until <= now) {
+        if (next === null) next = new Map(pending);
+        next.delete(id);
+      }
+    }
+    if (next !== null) pending = next;
+    if (pending.size === 0) return;
+    store = {
+      ...store,
+      states: store.states.map((s) => {
+        const action = pending.get(s.profileId);
+        return action === undefined ? s : { ...s, status: action.status };
+      }),
+    };
+  }
+
+  /**
+   * Run one row action with immediate feedback, in this order: loading state
+   * first, command second. The UI never waits on the command to paint, and a
+   * watchdog releases the row if the command never settles — the 3s poll
+   * keeps watching the truth either way, so a timeout degrades to "still
+   * watching", never to a wedged button.
    */
   async function act(
     id: string,
@@ -142,21 +212,25 @@
   ): Promise<void> {
     if (busyIds.has(id)) return;
     setBusy(id, true);
-    if (optimistic !== undefined) {
-      store = {
-        ...store,
-        states: store.states.map((s) =>
-          s.profileId === id ? { ...s, status: optimistic } : s,
-        ),
-      };
-    }
+    if (optimistic !== undefined) setPending(id, optimistic);
+    const watchdog = setTimeout(() => {
+      // A successful poll clears the banner (`refreshAll` resets `lastError`
+      // on fresh data), so a warning routed through it would be erased by the
+      // very refresh below. The toast channel survives polls instead.
+      setPending(id, null);
+      setBusy(id, false);
+      say(`${label} is taking longer than usual — still watching its status`);
+      void refresh();
+    }, pendingTtlMs());
     try {
       await fn();
       say(label);
     } catch (e) {
       store = { ...store, lastError: e instanceof Error ? e.message : "action failed" };
     } finally {
+      clearTimeout(watchdog);
       setBusy(id, false);
+      setPending(id, null);
       await refresh();
     }
   }
