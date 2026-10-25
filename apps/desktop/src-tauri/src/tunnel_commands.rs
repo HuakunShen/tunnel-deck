@@ -6,12 +6,18 @@
 //! `packages/ssh-service/src/http.ts` route for route, so the Web UI can
 //! switch transports without relearning the API.
 //!
-//! Commands are synchronous on purpose: the blocking manager methods
-//! (`start` waits out the ssh grace window, `stop` its kill grace) run on
-//! Tauri's command thread pool, never on the UI thread.
+//! Every command is `async` and hands its work to `spawn_blocking`.
+//!
+//! That is not stylistic: Tauri runs a synchronous command inline on the IPC
+//! caller's thread, which on macOS is the main thread — the same thread that
+//! paints the WebView. The manager blocks for real (`start` waits out the ssh
+//! grace window, `stop` its kill grace), so a sync command froze the window
+//! for a second or two and the optimistic "Starting…" state could not be
+//! painted until the command returned. Async commands run on the async
+//! runtime, and `spawn_blocking` keeps the sleeps off the worker pool.
 
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use tauri::State;
 use tunnel_core::contract::{ForwardRule, LaunchMode, SshHostInfo, SshOption, TunnelMode, TunnelProfile, TunnelState};
 use tunnel_core::error::{TunnelError, TunnelProblemCode};
@@ -36,7 +42,9 @@ pub type AppManager = Manager<
 >;
 
 pub struct AppState {
-    pub manager: Mutex<AppManager>,
+    /// Shared so a command can clone the handle into `spawn_blocking`
+    /// without holding a borrow across an await.
+    pub manager: Arc<Mutex<AppManager>>,
     pub instance_id: String,
 }
 
@@ -58,7 +66,7 @@ pub fn app_state() -> AppState {
         "ssh".to_string(),
     );
     AppState {
-        manager: Mutex::new(manager),
+        manager: Arc::new(Mutex::new(manager)),
         instance_id: format!(
             "app-{}-{}",
             std::time::SystemTime::now()
@@ -215,78 +223,107 @@ pub(crate) struct TerminalList {
     terminals: Vec<TerminalInfo>,
 }
 
+/// Run one manager call off the IPC thread.
+///
+/// The closure gets `&mut AppManager`; the handle is cloned first so nothing
+/// borrowed crosses the await. A poisoned mutex and a panicking worker both
+/// surface as `InternalError`, never as a silent hang.
+async fn run<T, F>(state: &AppState, work: F) -> Result<T, CommandProblem>
+where
+    T: Send + 'static,
+    F: FnOnce(&mut AppManager) -> Result<T, TunnelError> + Send + 'static,
+{
+    let manager = Arc::clone(&state.manager);
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut guard = manager.lock().map_err(|_| poisoned())?;
+        work(&mut guard).map_err(CommandProblem::from)
+    })
+    .await
+    .map_err(|_| poisoned())?
+}
+
 #[tauri::command]
-pub fn tunnel_health(state: State<'_, AppState>) -> Health {
-    Health {
+pub async fn tunnel_health(state: State<'_, AppState>) -> Result<Health, CommandProblem> {
+    // Nothing blocks here, but returning the same `Result` shape keeps every
+    // command uniform for the client (`invoke` rejects on Err).
+    Ok(Health {
         ok: true,
         version: env!("CARGO_PKG_VERSION").to_string(),
         service_instance_id: state.instance_id.clone(),
-    }
+    })
 }
 
 #[tauri::command]
-pub fn tunnel_list_profiles(state: State<'_, AppState>) -> Result<ProfileList, CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    let profiles = manager.list_profiles().map_err(CommandProblem::from)?.into_iter().collect();
-    Ok(ProfileList { profiles })
+pub async fn tunnel_list_profiles(state: State<'_, AppState>) -> Result<ProfileList, CommandProblem> {
+    run(&state, |manager| {
+        Ok(ProfileList { profiles: manager.list_profiles()? })
+    })
+    .await
 }
 
 #[tauri::command]
-pub fn tunnel_create_profile(
+pub async fn tunnel_create_profile(
     state: State<'_, AppState>,
     input: ProfileInput,
 ) -> Result<TunnelProfile, CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    manager.create_profile(input.into_profile()).map_err(CommandProblem::from)
+    run(&state, move |manager| manager.create_profile(input.into_profile())).await
 }
 
 #[tauri::command]
-pub fn tunnel_get_profile(state: State<'_, AppState>, id: String) -> Result<TunnelProfile, CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    manager.get_profile(&id).map_err(CommandProblem::from)
+pub async fn tunnel_get_profile(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<TunnelProfile, CommandProblem> {
+    run(&state, move |manager| manager.get_profile(&id)).await
 }
 
 #[tauri::command]
-pub fn tunnel_update_profile(
+pub async fn tunnel_update_profile(
     state: State<'_, AppState>,
     id: String,
     input: ProfileInput,
 ) -> Result<TunnelProfile, CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    manager.update_profile(&id, input.into_profile()).map_err(CommandProblem::from)
+    run(&state, move |manager| manager.update_profile(&id, input.into_profile())).await
 }
 
 #[tauri::command]
-pub fn tunnel_delete_profile(state: State<'_, AppState>, id: String) -> Result<(), CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    manager.delete_profile(&id).map_err(CommandProblem::from)
+pub async fn tunnel_delete_profile(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<(), CommandProblem> {
+    run(&state, move |manager| manager.delete_profile(&id)).await
 }
 
 #[tauri::command]
-pub fn tunnel_list_states(state: State<'_, AppState>) -> Result<StateList, CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    let states = manager.list_states().map_err(CommandProblem::from)?.into_iter().collect();
-    Ok(StateList { states })
+pub async fn tunnel_list_states(state: State<'_, AppState>) -> Result<StateList, CommandProblem> {
+    // The poll path: `list_states` runs `ssh -O check` per profile, which is
+    // real process I/O. On the IPC thread it would stutter the window every
+    // three seconds; here it only occupies a blocked worker.
+    run(&state, |manager| Ok(StateList { states: manager.list_states()? })).await
 }
 
 #[tauri::command]
-pub fn tunnel_get_state(state: State<'_, AppState>, id: String) -> Result<TunnelState, CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    manager.get_state(&id).map_err(CommandProblem::from)
+pub async fn tunnel_get_state(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<TunnelState, CommandProblem> {
+    run(&state, move |manager| manager.get_state(&id)).await
 }
 
 #[tauri::command]
-pub fn tunnel_preview(
+pub async fn tunnel_preview(
     state: State<'_, AppState>,
     id: String,
 ) -> Result<PreviewWire, CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    let preview: Preview = manager.preview(&id).map_err(CommandProblem::from)?;
-    Ok(PreviewWire {
-        profile_id: id,
-        argv: preview.argv,
-        command: preview.command,
+    run(&state, move |manager| {
+        let preview: Preview = manager.preview(&id)?;
+        Ok(PreviewWire {
+            profile_id: id,
+            argv: preview.argv,
+            command: preview.command,
+        })
     })
+    .await
 }
 
 #[derive(Debug, Serialize)]
@@ -298,44 +335,55 @@ pub(crate) struct PreviewWire {
 }
 
 #[tauri::command]
-pub fn tunnel_start(state: State<'_, AppState>, id: String) -> Result<TunnelState, CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    manager.start(&id).map_err(CommandProblem::from)
+pub async fn tunnel_start(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<TunnelState, CommandProblem> {
+    // Waits out the ssh grace window (0.9s+, 4s per jump hop). Off-thread is
+    // what lets the page paint "Starting…" before this returns.
+    run(&state, move |manager| manager.start(&id)).await
 }
 
 #[tauri::command]
-pub fn tunnel_stop(state: State<'_, AppState>, id: String) -> Result<TunnelState, CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    manager.stop(&id).map_err(CommandProblem::from)
+pub async fn tunnel_stop(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<TunnelState, CommandProblem> {
+    // Kill grace: 1.2s, then up to 0.4s more. Same reason as `start`.
+    run(&state, move |manager| manager.stop(&id)).await
 }
 
 #[tauri::command]
-pub fn tunnel_stop_all(state: State<'_, AppState>) -> Result<StateList, CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    Ok(StateList { states: manager.stop_all() })
+pub async fn tunnel_stop_all(state: State<'_, AppState>) -> Result<StateList, CommandProblem> {
+    run(&state, |manager| Ok(StateList { states: manager.stop_all() })).await
 }
 
 #[tauri::command]
-pub fn tunnel_probe(state: State<'_, AppState>, id: String) -> Result<TunnelState, CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    manager.probe_tunnel(&id).map_err(CommandProblem::from)
+pub async fn tunnel_probe(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<TunnelState, CommandProblem> {
+    // Up to three dials at 2.5s each plus two 800ms waits.
+    run(&state, move |manager| manager.probe_tunnel(&id)).await
 }
 
 #[tauri::command]
-pub fn tunnel_log_tail(
+pub async fn tunnel_log_tail(
     state: State<'_, AppState>,
     id: String,
     tail: Option<usize>,
 ) -> Result<LogTailWire, CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    let log: LogTail = manager.log_tail(&id, tail.unwrap_or(200).clamp(1, 2000)).map_err(CommandProblem::from)?;
-    Ok(LogTailWire {
-        profile_id: log.profile_id,
-        path: log.path.to_string_lossy().into_owned(),
-        lines: log.lines,
-        truncated: log.truncated,
-        bytes: log.bytes,
+    run(&state, move |manager| {
+        let log: LogTail = manager.log_tail(&id, tail.unwrap_or(200).clamp(1, 2000))?;
+        Ok(LogTailWire {
+            profile_id: log.profile_id,
+            path: log.path.to_string_lossy().into_owned(),
+            lines: log.lines,
+            truncated: log.truncated,
+            bytes: log.bytes,
+        })
     })
+    .await
 }
 
 #[derive(Debug, Serialize)]
@@ -349,39 +397,53 @@ pub(crate) struct LogTailWire {
 }
 
 #[tauri::command]
-pub fn tunnel_list_hosts() -> HostList {
-    HostList { hosts: read_ssh_config_hosts() }
+pub async fn tunnel_list_hosts() -> Result<HostList, CommandProblem> {
+    // Reads and parses ~/.ssh/config: file I/O, so off the IPC thread too.
+    tauri::async_runtime::spawn_blocking(|| HostList { hosts: read_ssh_config_hosts() })
+        .await
+        .map_err(|_| poisoned())
 }
 
 #[tauri::command]
-pub fn tunnel_list_terminals(state: State<'_, AppState>) -> Result<TerminalList, CommandProblem> {
-    let manager = state.manager.lock().map_err(|_| poisoned())?;
-    Ok(TerminalList { terminals: manager.list_terminals() })
+pub async fn tunnel_list_terminals(
+    state: State<'_, AppState>,
+) -> Result<TerminalList, CommandProblem> {
+    // Probes /Applications for app bundles.
+    run(&state, |manager| Ok(TerminalList { terminals: manager.list_terminals() })).await
 }
 
 #[tauri::command]
-pub fn tunnel_launch_in_terminal(
+pub async fn tunnel_launch_in_terminal(
     state: State<'_, AppState>,
     id: String,
     terminal_id: String,
     mode: Option<LaunchMode>,
 ) -> Result<LaunchResult, CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    manager
-        .launch_in_terminal(&id, &terminal_id, mode.unwrap_or(LaunchMode::Tunnel))
-        .map(LaunchResult::from)
-        .map_err(CommandProblem::from)
+    // Waits out the launcher settle window (700ms).
+    run(&state, move |manager| {
+        manager
+            .launch_in_terminal(&id, &terminal_id, mode.unwrap_or(LaunchMode::Tunnel))
+            .map(LaunchResult::from)
+    })
+    .await
 }
 
 #[tauri::command]
-pub fn tunnel_close_session(state: State<'_, AppState>, id: String) -> Result<bool, CommandProblem> {
-    let mut manager = state.manager.lock().map_err(|_| poisoned())?;
-    Ok(manager.close_session(&id))
+pub async fn tunnel_close_session(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<bool, CommandProblem> {
+    run(&state, move |manager| Ok(manager.close_session(&id))).await
 }
 
 #[tauri::command]
-pub fn tunnel_open_url(state: State<'_, AppState>, url: String) -> Result<OpenUrlResult, CommandProblem> {
-    let manager = state.manager.lock().map_err(|_| poisoned())?;
-    let opened_at = manager.open_url(&url).map_err(CommandProblem::from)?;
-    Ok(OpenUrlResult { url, opened_at })
+pub async fn tunnel_open_url(
+    state: State<'_, AppState>,
+    url: String,
+) -> Result<OpenUrlResult, CommandProblem> {
+    run(&state, move |manager| {
+        let opened_at = manager.open_url(&url)?;
+        Ok(OpenUrlResult { url, opened_at })
+    })
+    .await
 }
