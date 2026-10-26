@@ -1,4 +1,4 @@
-# Design: ssh-tunnel-ui
+# Design: TunnelDeck
 
 ## Goal
 
@@ -77,11 +77,13 @@ a front = new `apps/` or `integrations/` dir, no domain logic copied.
 ## Desktop shell (Tauri, real)
 
 `apps/desktop/src-tauri` is a separate cargo workspace (structural isolation:
-root builds never see WebView deps). The Rust shell is thin by design —
-`spawn_sidecar` starts the bundled `server.mjs` via node (or attaches to a
-running daemon), waits for `/api/health`, and opens the bundled Web UI.
-`cargo check` + `cargo clippy -D warnings` + `cargo build` all pass; the
-`daemon_url` command lets the UI discover the port without hardcoding.
+root builds never see WebView deps). The Rust shell is thin by design — it
+links `crates/tunnel-core` in-process and exposes it through typed `tunnel_*`
+commands; the Web UI talks to them through `createInvokeTunnelClient`. There
+is no sidecar, no loopback port, and no JavaScript runtime to install.
+`cargo check` + `cargo clippy` + `cargo test` + `tauri build` all pass; see
+`docs/rust-core.md` for the core design and `fixtures/` for the cross-language
+contract gates.
 
 ## DSH plugin (real host + client halves)
 

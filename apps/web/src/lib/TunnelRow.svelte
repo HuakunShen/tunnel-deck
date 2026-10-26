@@ -12,6 +12,7 @@
     ExternalLink,
     FlaskConical,
     Link,
+    LoaderCircle,
     Pencil,
     Play,
     ScrollText,
@@ -209,7 +210,14 @@
   </div>
 
   <div class="row-actions shrink-0">
-    {#if live}
+    {#if status === "starting" || status === "stopping"}
+      {#key status}
+        <button class="toolbar-button" disabled aria-busy="true" title="Working…">
+          <LoaderCircle size={13} class="animate-spin" />
+          {status === "starting" ? "Starting…" : "Stopping…"}
+        </button>
+      {/key}
+    {:else if live}
       <button class="toolbar-button" disabled={busy} onclick={() => onStop(profile.id)} title="Stop tunnel">
         <CircleStop size={13} /> Stop
       </button>
@@ -241,8 +249,8 @@
       {#if endpointCopied}<Check size={14} />{:else}<Link size={14} />{/if}
     </button>
 
-    <button class="toolbar-icon" disabled={busy} onclick={() => onProbe(profile.id)} title="Probe forwarded ports" aria-label="Probe forwarded ports">
-      <FlaskConical size={14} />
+    <button class="toolbar-icon" disabled={busy} aria-busy={busy} onclick={() => onProbe(profile.id)} title="Probe forwarded ports" aria-label="Probe forwarded ports">
+      {#if busy}<LoaderCircle size={14} class="animate-spin" />{:else}<FlaskConical size={14} />{/if}
     </button>
 
     <div class="relative">

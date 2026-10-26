@@ -1,4 +1,4 @@
-# ssh-tunnel-ui agent handbook
+# TunnelDeck agent handbook
 
 ## Directory responsibilities
 

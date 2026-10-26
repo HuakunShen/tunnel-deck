@@ -1,11 +1,12 @@
 # Release: build the desktop app for every supported platform and publish the
 # bundles on one GitHub Release.
 #
-# `v0.1.3` -> one Release carrying
-#   SSH-Tunnel-0.1.3-macos-arm64.dmg / .zip
-#   SSH-Tunnel-0.1.3-macos-x64.dmg / .zip
-#   SSH-Tunnel-0.1.3-linux-x64.deb / .AppImage
-#   SSH-Tunnel-0.1.3-windows-x64-setup.exe
+# `v0.2.0` -> one Release carrying
+#   TunnelDeck-0.2.0-macos-arm64.dmg / .zip / .app.tar.gz (+ .sig)
+#   TunnelDeck-0.2.0-macos-x64.dmg / .zip / .app.tar.gz (+ .sig)
+#   TunnelDeck-0.2.0-linux-x64.deb / .AppImage / .AppImage.tar.gz (+ .sig)
+#   TunnelDeck-0.2.0-windows-x64-setup.exe / -setup.nsis.zip (+ .sig)
+#   latest.json (the updater feed)
 # A manual run without a tag builds the same artifacts and keeps them as
 # workflow artifacts instead of publishing anything.
 #
@@ -87,12 +88,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # The shell bundles the daemon and the Web UI as resources, so both must
-      # exist before `tauri build` copies them in.
+      # The shell embeds the Web UI as `frontendDist`, so it must exist before
+      # `tauri build` copies it in. The CLI/TUI/daemon bundles also build here
+      # (unchanged release surface for the npm line).
       - name: Build the daemon, CLI, TUI and Web UI
         run: pnpm build
 
-      # Tag and bundle must agree: a `v0.1.3` tag that ships a 0.1.2 bundle is
+      # Tag and bundle must agree: a `v0.2.0` tag that ships a 0.1.3 bundle is
       # how the download ends up lying about itself.
       - name: Stamp the bundle version from the tag
         if: startsWith(github.ref, 'refs/tags/v')
@@ -113,9 +115,17 @@ jobs:
       #
       # `pnpm run <script> -- ...` would hand the `--` to tauri, which then
       # forwards `--bundles` to cargo. Call the CLI directly instead.
+      #
+      # The updater key signs every build (manual runs included, so the
+      # artifacts are identical to a tagged one). Without the secrets — forks
+      # — the build still succeeds but emits no `.sig`, and collection skips
+      # the unsigned updater archives.
       - name: Build the app and its installers
         working-directory: apps/desktop
         shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm exec tauri build ${{ matrix.args }}
 
       - name: Collect the bundles into dist/
@@ -134,13 +144,13 @@ jobs:
         shell: bash
         run: |
           cd "apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/macos"
-          ditto -c -k --sequesterRsrc --keepParent "SSH Tunnel.app" \
-            "$GITHUB_WORKSPACE/dist/SSH-Tunnel-${APP_VERSION}-${{ matrix.label }}.zip"
+          ditto -c -k --sequesterRsrc --keepParent "TunnelDeck.app" \
+            "$GITHUB_WORKSPACE/dist/TunnelDeck-${APP_VERSION}-${{ matrix.label }}.zip"
 
       - name: Keep this platform's artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: SSH-Tunnel-${{ matrix.label }}
+          name: TunnelDeck-${{ matrix.label }}
           path: dist/*
           if-no-files-found: error
 
@@ -150,6 +160,12 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
+      # The feed script lives in the repo, not in the artifacts.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+          sparse-checkout-cone-mode: false
+
       # One release, every platform: each bundle job uploads to the same tag, so
       # the download page lists arm64 and x64 side by side instead of two
       # releases fighting over one name.
@@ -160,6 +176,12 @@ jobs:
 
       - name: List what will be published
         run: ls -l dist
+
+      # The updater feed points at the release assets by exact name, so it is
+      # rendered here — after every platform landed — and never by hand.
+      # `--strict`: a feed missing a platform strands those users silently.
+      - name: Render the updater feed
+        run: node scripts/render-updater-json.mjs --tag "$GITHUB_REF_NAME" --dir dist --strict
 
       - uses: softprops/action-gh-release@v2
         with:

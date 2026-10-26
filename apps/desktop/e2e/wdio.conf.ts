@@ -1,5 +1,5 @@
 /**
- * WebdriverIO config for the SSH Tunnel desktop app (Tauri 2).
+ * WebdriverIO config for the TunnelDeck desktop app (Tauri 2).
  *
  * Follows the official Tauri WebDriver guide: the `@wdio/tauri-service`
  * runs an **embedded** WebDriver server inside the app itself, so macOS
@@ -33,7 +33,7 @@ export const config: WebdriverIO.Config = {
       "tauri:options": {
         application: join(
           targetDir,
-          "release/bundle/macos/SSH Tunnel.app/Contents/MacOS/ssh-tunnel-desktop",
+          "release/bundle/macos/TunnelDeck.app/Contents/MacOS/ssh-tunnel-desktop",
         ),
       },
     },

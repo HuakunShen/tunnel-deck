@@ -1,0 +1,389 @@
+{
+  "version": "2026-10-25",
+  "last_commit": "0675e0e29bfef87e4a0aa8a33f2bd9ddd6fb0f2b",
+  "knowledge_relations": [
+    {
+      "id": 1,
+      "source_id": "04bdb47a-722d-5bcb-813a-6f0f062b87a4",
+      "target_id": "f76eef78-fd23-5660-83df-70f8ec898484",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: System Overview -> Architecture"
+    },
+    {
+      "id": 2,
+      "source_id": "f76eef78-fd23-5660-83df-70f8ec898484",
+      "target_id": "55523223-9c5b-5b0d-8d59-d00cc7640953",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: Architecture -> Monorepo Layout"
+    },
+    {
+      "id": 3,
+      "source_id": "f76eef78-fd23-5660-83df-70f8ec898484",
+      "target_id": "7d6ac256-e8cf-53ad-b1b1-0d637283b824",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: Architecture -> Boundaries and Drift"
+    },
+    {
+      "id": 4,
+      "source_id": "04bdb47a-722d-5bcb-813a-6f0f062b87a4",
+      "target_id": "2b4877bc-b56e-5d6e-b314-6dd858fd3878",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: System Overview -> Rust Tunnel Core"
+    },
+    {
+      "id": 5,
+      "source_id": "04bdb47a-722d-5bcb-813a-6f0f062b87a4",
+      "target_id": "f2116276-6dd2-54a0-b8f7-59b8223cb6c2",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: System Overview -> TypeScript Service Layer"
+    },
+    {
+      "id": 6,
+      "source_id": "04bdb47a-722d-5bcb-813a-6f0f062b87a4",
+      "target_id": "0ecb88d0-e64a-5368-a3a8-413a239dc5af",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: System Overview -> Desktop App"
+    },
+    {
+      "id": 7,
+      "source_id": "04bdb47a-722d-5bcb-813a-6f0f062b87a4",
+      "target_id": "ba838257-8c5f-57d2-b2a0-25fafc92bb08",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: System Overview -> Web Console"
+    },
+    {
+      "id": 8,
+      "source_id": "04bdb47a-722d-5bcb-813a-6f0f062b87a4",
+      "target_id": "e90b64ff-4a09-50f3-915e-01e180c33de9",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: System Overview -> CLI"
+    },
+    {
+      "id": 9,
+      "source_id": "04bdb47a-722d-5bcb-813a-6f0f062b87a4",
+      "target_id": "6e039c2b-2e7b-5dbe-8992-74823ed71972",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: System Overview -> TUI"
+    },
+    {
+      "id": 10,
+      "source_id": "04bdb47a-722d-5bcb-813a-6f0f062b87a4",
+      "target_id": "f63d5581-3ed6-535a-bf3a-91c167062c08",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: System Overview -> Server Daemon"
+    },
+    {
+      "id": 11,
+      "source_id": "04bdb47a-722d-5bcb-813a-6f0f062b87a4",
+      "target_id": "c5d1cbef-8e2d-5b75-839d-3f8ce043465d",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: System Overview -> DSH Plugin"
+    },
+    {
+      "id": 12,
+      "source_id": "04bdb47a-722d-5bcb-813a-6f0f062b87a4",
+      "target_id": "25240841-ce9e-571d-a38d-c1798dd33860",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: System Overview -> VS Code Extension"
+    },
+    {
+      "id": 13,
+      "source_id": "04bdb47a-722d-5bcb-813a-6f0f062b87a4",
+      "target_id": "49bc0821-f731-55ec-aeb8-785f8eaa7488",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: System Overview -> Build and Release"
+    },
+    {
+      "id": 14,
+      "source_id": "04bdb47a-722d-5bcb-813a-6f0f062b87a4",
+      "target_id": "14e8a486-6f78-56aa-b3f7-585290d48cbc",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: System Overview -> Testing and Fixtures"
+    },
+    {
+      "id": 15,
+      "source_id": "f76eef78-fd23-5660-83df-70f8ec898484",
+      "target_id": "2f009a87-08cd-5008-a131-fb5c3ee30050",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: Architecture -> Contract"
+    },
+    {
+      "id": 16,
+      "source_id": "f76eef78-fd23-5660-83df-70f8ec898484",
+      "target_id": "c681d43b-75cb-5803-a00c-73d8c8d131ab",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: Architecture -> Core Logic"
+    },
+    {
+      "id": 17,
+      "source_id": "f76eef78-fd23-5660-83df-70f8ec898484",
+      "target_id": "03b81840-7a51-505a-8094-409c9ebb181d",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: Architecture -> Typed Client"
+    },
+    {
+      "id": 18,
+      "source_id": "f76eef78-fd23-5660-83df-70f8ec898484",
+      "target_id": "6258b757-b90b-5650-a30e-73ae515a9895",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: Architecture -> Node Host"
+    },
+    {
+      "id": 19,
+      "source_id": "f76eef78-fd23-5660-83df-70f8ec898484",
+      "target_id": "3107da51-2b47-5100-8ab9-4138264c818e",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: Architecture -> Web UI Kit"
+    },
+    {
+      "id": 20,
+      "source_id": "f76eef78-fd23-5660-83df-70f8ec898484",
+      "target_id": "da535bdf-f37e-570e-9bda-a70a7f5d5032",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "PARENT_CHILD",
+      "extra": "Wiki parent-child relationship: Architecture -> Build Helper"
+    },
+    {
+      "id": 21,
+      "source_id": "2b4877bc-b56e-5d6e-b314-6dd858fd3878",
+      "target_id": "0ecb88d0-e64a-5368-a3a8-413a239dc5af",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "REFERENCE",
+      "extra": "The desktop shell embeds tunnel-core in-process through Tauri commands"
+    },
+    {
+      "id": 22,
+      "source_id": "f2116276-6dd2-54a0-b8f7-59b8223cb6c2",
+      "target_id": "f63d5581-3ed6-535a-bf3a-91c167062c08",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "REFERENCE",
+      "extra": "The server binary is a composition-only wrapper around startDaemon"
+    },
+    {
+      "id": 23,
+      "source_id": "2f009a87-08cd-5008-a131-fb5c3ee30050",
+      "target_id": "03b81840-7a51-505a-8094-409c9ebb181d",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "REFERENCE",
+      "extra": "The typed client validates every response with the contract schemas"
+    },
+    {
+      "id": 24,
+      "source_id": "14e8a486-6f78-56aa-b3f7-585290d48cbc",
+      "target_id": "2b4877bc-b56e-5d6e-b314-6dd858fd3878",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "REFERENCE",
+      "extra": "The same fixtures/argv and state-machine JSON gate the Rust and TypeScript implementations"
+    },
+    {
+      "id": 25,
+      "source_id": "7d6ac256-e8cf-53ad-b1b1-0d637283b824",
+      "target_id": "55523223-9c5b-5b0d-8d59-d00cc7640953",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "REFERENCE",
+      "extra": "Drift findings are grounded in the actual workspace dependency edges"
+    },
+    {
+      "id": 26,
+      "source_id": "ba838257-8c5f-57d2-b2a0-25fafc92bb08",
+      "target_id": "3107da51-2b47-5100-8ab9-4138264c818e",
+      "source_type": "WIKI_ITEM",
+      "target_type": "WIKI_ITEM",
+      "relationship_type": "REFERENCE",
+      "extra": "The console consumes the shared components, tokens and shell geometry"
+    }
+  ],
+  "wiki_items": [
+    {
+      "id": "04bdb47a-722d-5bcb-813a-6f0f062b87a4",
+      "title": "System Overview",
+      "path": "content/System Overview.md",
+      "level": 1,
+      "description": "Product overview: two implementations of one SSH tunnel domain, runtime topology, fronts, transports, persistent state, lifecycle and error model."
+    },
+    {
+      "id": "f76eef78-fd23-5660-83df-70f8ec898484",
+      "title": "Architecture",
+      "path": "content/Architecture/Architecture.md",
+      "level": 2,
+      "description": "Ports-and-adapters design shared by the Rust and TypeScript managers, transport selection, adoption, timing constants, security boundaries and design tensions."
+    },
+    {
+      "id": "55523223-9c5b-5b0d-8d59-d00cc7640953",
+      "title": "Monorepo Layout",
+      "path": "content/Architecture/Monorepo Layout.md",
+      "level": 3,
+      "description": "pnpm/Turborepo workspace plus three Cargo workspaces, package roles, dependency edges, source-direct libraries and bundled artifacts."
+    },
+    {
+      "id": "7d6ac256-e8cf-53ad-b1b1-0d637283b824",
+      "title": "Boundaries and Drift",
+      "path": "content/Architecture/Boundaries and Drift.md",
+      "level": 3,
+      "description": "What check-boundaries actually enforces, where AGENTS.md and README diverge from the code, and verified Rust/TypeScript behavioural drift."
+    },
+    {
+      "id": "2b4877bc-b56e-5d6e-b314-6dd858fd3878",
+      "title": "Rust Tunnel Core",
+      "path": "content/Core/Rust Tunnel Core.md",
+      "level": 2,
+      "description": "crates/tunnel-core: contract, errors, state machine, validation, argv builder, ports, OS host implementations and the blocking manager."
+    },
+    {
+      "id": "f2116276-6dd2-54a0-b8f7-59b8223cb6c2",
+      "title": "TypeScript Service Layer",
+      "path": "content/Core/TypeScript Service Layer.md",
+      "level": 2,
+      "description": "packages/ssh-service: TunnelManager lifecycle, persistence semantics, the 19-endpoint Hono API, and the daemon launcher."
+    },
+    {
+      "id": "2f009a87-08cd-5008-a131-fb5c3ee30050",
+      "title": "Contract",
+      "path": "content/Packages/Contract.md",
+      "level": 2,
+      "description": "packages/ssh-contract: zod profile/state schemas, closed problem codes, HTTP status map, response envelopes and route table."
+    },
+    {
+      "id": "c681d43b-75cb-5803-a00c-73d8c8d131ab",
+      "title": "Core Logic",
+      "path": "content/Packages/Core Logic.md",
+      "level": 2,
+      "description": "packages/ssh-core: ssh argv building, endpoint derivation, semantic validation and the lifecycle state machine."
+    },
+    {
+      "id": "03b81840-7a51-505a-8094-409c9ebb181d",
+      "title": "Typed Client",
+      "path": "content/Packages/Typed Client.md",
+      "level": 2,
+      "description": "packages/ssh-client: fetch client, Tauri invoke client, response validation, error mapping and the full HTTP/IPC command map."
+    },
+    {
+      "id": "6258b757-b90b-5650-a30e-73ae515a9895",
+      "title": "Node Host",
+      "path": "content/Packages/Node Host.md",
+      "level": 2,
+      "description": "packages/ssh-host-node: process supervision, TCP probing, atomic profile store, runtime records, control sockets, PATH lookup, ssh config, terminals and URL opening."
+    },
+    {
+      "id": "3107da51-2b47-5100-8ab9-4138264c818e",
+      "title": "Web UI Kit",
+      "path": "content/Packages/Web UI Kit.md",
+      "level": 2,
+      "description": "packages/web-ui: shadcn-svelte components, platform-variant tokens and the shell geometry shared by every console host."
+    },
+    {
+      "id": "da535bdf-f37e-570e-9bda-a70a7f5d5032",
+      "title": "Build Helper",
+      "path": "content/Packages/Build Helper.md",
+      "level": 2,
+      "description": "packages/build-helper: shared esbuild bundling, TUI externals, production defines and per-package build scripts."
+    },
+    {
+      "id": "0ecb88d0-e64a-5368-a3a8-413a239dc5af",
+      "title": "Desktop App",
+      "path": "content/Applications/Desktop App.md",
+      "level": 2,
+      "description": "apps/desktop: Tauri 2 shell linking tunnel-core in-process, 19 IPC commands, window material on macOS/Windows, configuration, build and WebDriver e2e."
+    },
+    {
+      "id": "ba838257-8c5f-57d2-b2a0-25fafc92bb08",
+      "title": "Web Console",
+      "path": "content/Applications/Web Console.md",
+      "level": 2,
+      "description": "apps/web: static SvelteKit SPA, transport selection, polling, tunnel rows, editor, log sheet, appearance and test hooks."
+    },
+    {
+      "id": "e90b64ff-4a09-50f3-915e-01e180c33de9",
+      "title": "CLI",
+      "path": "content/Applications/CLI.md",
+      "level": 2,
+      "description": "apps/cli: daemon/direct modes, command set, output and error behaviour, direct-mode capability limits and help-text drift."
+    },
+    {
+      "id": "6e039c2b-2e7b-5dbe-8992-74823ed71972",
+      "title": "TUI",
+      "path": "content/Applications/TUI.md",
+      "level": 2,
+      "description": "apps/tui: OpenTUI/React fullscreen console, keyboard map, pure list view, creation form, bundling and test layers."
+    },
+    {
+      "id": "f63d5581-3ed6-535a-bf3a-91c167062c08",
+      "title": "Server Daemon",
+      "path": "content/Applications/Server Daemon.md",
+      "level": 2,
+      "description": "apps/server: composition-only daemon binary, flags, startup sequence, static Web UI serving, discovery file and operational limits."
+    },
+    {
+      "id": "c5d1cbef-8e2d-5b75-839d-3f8ce043465d",
+      "title": "DSH Plugin",
+      "path": "content/Integrations/DSH Plugin.md",
+      "level": 2,
+      "description": "integrations/dsh: in-process Hono workbench mounted on the DeepSeek Harness server, loopback guards and the framed panel."
+    },
+    {
+      "id": "25240841-ce9e-571d-a38d-c1798dd33860",
+      "title": "VS Code Extension",
+      "path": "content/Integrations/VS Code Extension.md",
+      "level": 2,
+      "description": "integrations/vscode: daemon supervisor, sidebar tree, commands, workbench webview, packaging and tests."
+    },
+    {
+      "id": "49bc0821-f731-55ec-aeb8-785f8eaa7488",
+      "title": "Build and Release",
+      "path": "content/Infrastructure/Build and Release.md",
+      "level": 2,
+      "description": "Local scripts, Turbo graph, CI jobs, tag-driven multi-platform release, version stamping, artifact naming and signing reality."
+    },
+    {
+      "id": "14e8a486-6f78-56aa-b3f7-585290d48cbc",
+      "title": "Testing and Fixtures",
+      "path": "content/Infrastructure/Testing and Fixtures.md",
+      "level": 2,
+      "description": "Vitest configurations, suite map, cross-language golden fixtures, Rust gates, desktop e2e and what CI actually runs."
+    }
+  ]
+}

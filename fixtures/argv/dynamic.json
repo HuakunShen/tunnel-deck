@@ -1,0 +1,15 @@
+{
+  "name": "dynamic SOCKS forward",
+  "profile": {
+    "id": "t-test",
+    "name": "test",
+    "mode": "dynamic",
+    "sshTarget": "ufo",
+    "forwards": [{ "kind": "dynamic", "bindPort": 11080 }],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  "options": {},
+  "mustContain": ["-D", "11080", "-N"],
+  "mustNotContain": ["-L", "-R"]
+}

@@ -75,6 +75,32 @@ jobs:
           node apps/cli/dist/cli.mjs list --daemon=http://127.0.0.1:7499
           kill %1
 
+  # The headless Rust core is the other half of the contract: `fixtures/`
+  # adjudicates the TypeScript and Rust implementations against each other, so
+  # both suites run here. Ubuntu is enough — the crate is WebView-free by
+  # construction, and the shell matrix below covers the OS-specific branches.
+  core:
+    name: tunnel-core — test + clippy
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: .
+
+      - name: Tests (unit + cross-language fixtures)
+        run: cargo test -p tunnel-core
+
+      - name: Clippy, warnings deny
+        run: cargo clippy -p tunnel-core --all-targets -- -D warnings
+
   # The release builds the shell on three operating systems; if one of them
   # stops compiling, a tag is the worst place to find out. `cargo check` is the
   # cheap half of `tauri build` — it never links a bundle, but it compiles every

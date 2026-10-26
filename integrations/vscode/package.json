@@ -1,6 +1,6 @@
 {
   "name": "vscode-ssh-tunnel",
-  "displayName": "SSH Tunnel",
+  "displayName": "TunnelDeck",
   "description": "One-click SSH tunnels: remember every forward, start/stop from the sidebar.",
   "version": "0.1.0",
   "private": true,
@@ -19,7 +19,7 @@
       "activitybar": [
         {
           "id": "sshTunnel",
-          "title": "SSH Tunnel",
+          "title": "TunnelDeck",
           "icon": "assets/tunnel.svg"
         }
       ]
@@ -36,36 +36,36 @@
       {
         "command": "ssh-tunnel.start",
         "title": "Start Tunnel",
-        "category": "SSH Tunnel",
+        "category": "TunnelDeck",
         "icon": "$(play)"
       },
       {
         "command": "ssh-tunnel.stop",
         "title": "Stop Tunnel",
-        "category": "SSH Tunnel",
+        "category": "TunnelDeck",
         "icon": "$(stop)"
       },
       {
         "command": "ssh-tunnel.probe",
         "title": "Probe Tunnel",
-        "category": "SSH Tunnel",
+        "category": "TunnelDeck",
         "icon": "$(pulse)"
       },
       {
         "command": "ssh-tunnel.stopAll",
         "title": "Stop All Tunnels",
-        "category": "SSH Tunnel"
+        "category": "TunnelDeck"
       },
       {
         "command": "ssh-tunnel.refresh",
         "title": "Refresh",
-        "category": "SSH Tunnel",
+        "category": "TunnelDeck",
         "icon": "$(refresh)"
       },
       {
         "command": "ssh-tunnel.openWorkbench",
         "title": "Open Workbench",
-        "category": "SSH Tunnel"
+        "category": "TunnelDeck"
       }
     ],
     "menus": {
@@ -104,7 +104,7 @@
       ]
     },
     "configuration": {
-      "title": "SSH Tunnel",
+      "title": "TunnelDeck",
       "properties": {
         "sshTunnel.daemonUrl": {
           "type": "string",

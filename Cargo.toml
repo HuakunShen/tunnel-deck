@@ -1,0 +1,19 @@
+# Root Rust workspace: headless tunnel crates only.
+#
+# The Tauri shell (`apps/desktop/src-tauri`) and the GPUI experiment
+# (`apps/gpui`) are separate workspaces on purpose — see their own Cargo.toml
+# headers. They may depend on these crates by path, but nothing here may
+# depend on them, so `cargo build` at this root never needs a WebView.
+[workspace]
+members = ["crates/*"]
+default-members = ["crates/tunnel-core"]
+resolver = "2"
+
+[workspace.dependencies]
+# One place with the answer; member crates use `.workspace = true`.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+# Minimal UTC clock formatting (timestamps only) and pid-liveness on unix.
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+libc = "0.2"

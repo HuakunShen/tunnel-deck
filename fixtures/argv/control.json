@@ -1,0 +1,15 @@
+{
+  "name": "control socket adds exactly the multiplexing trio",
+  "profile": {
+    "id": "t-test",
+    "name": "test",
+    "mode": "local",
+    "sshTarget": "ufo",
+    "forwards": [{ "kind": "local", "bindPort": 18080, "targetHost": "127.0.0.1", "targetPort": 80 }],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  "options": { "controlPath": "/tmp/t-test.sock" },
+  "mustContain": ["ControlMaster=yes", "ControlPath=/tmp/t-test.sock", "ControlPersist=no"],
+  "mustNotContain": []
+}

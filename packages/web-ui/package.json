@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "SSH Tunnel shadcn-svelte component library: buttons, inputs, badges, cards shared by the web console, Tauri shell, DSH panel and VS Code webview.",
+  "description": "TunnelDeck shadcn-svelte component library: buttons, inputs, badges, cards shared by the web console, Tauri shell, DSH panel and VS Code webview.",
   "exports": {
     ".": "./src/index.ts",
     "./styles.css": "./src/styles.css",

@@ -9,7 +9,7 @@
  * Usage: `bun ./scripts/build.ts` here, or `pnpm --filter @ssh-tunnel/desktop build`.
  */
 import { $ } from "bun";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { packageDirFromScriptsFile } from "@ssh-tunnel/build-helper";
 
@@ -35,10 +35,20 @@ if (cargoOk) {
 // inputs so `tauri build` and caches can rely on one file.
 const outdir = join(packageDir, "dist");
 mkdirSync(outdir, { recursive: true });
+// Read the addresses from the file `tauri build` actually consumes, so the
+// manifest can never disagree with the bundle about where the UI comes from.
+const tauriConf = JSON.parse(
+  readFileSync(join(packageDir, "src-tauri", "tauri.conf.json"), "utf8"),
+) as { build?: { frontendDist?: string; devUrl?: string } };
 writeFileSync(
   join(outdir, "shell.json"),
   JSON.stringify(
-    { webPresent, cargoOk, frontendDist: "../web/dist", devUrl: "http://127.0.0.1:7432" },
+    {
+      webPresent,
+      cargoOk,
+      frontendDist: tauriConf.build?.frontendDist ?? "../web/dist",
+      devUrl: tauriConf.build?.devUrl ?? "http://127.0.0.1:5173",
+    },
     null,
     2,
   ),

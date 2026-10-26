@@ -1,0 +1,15 @@
+{
+  "name": "basic local forward with safe defaults",
+  "profile": {
+    "id": "t-test",
+    "name": "test",
+    "mode": "local",
+    "sshTarget": "ufo",
+    "forwards": [{ "kind": "local", "bindPort": 18080, "targetHost": "127.0.0.1", "targetPort": 80 }],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  "options": {},
+  "mustContain": ["-L", "18080:127.0.0.1:80", "-N", "ufo", "ExitOnForwardFailure=yes"],
+  "mustNotContain": []
+}

@@ -8,6 +8,7 @@
 -->
 <script lang="ts">
   import { X } from "@lucide/svelte";
+  import UpdateSection from "$lib/UpdateSection.svelte";
 
   interface Props {
     open: boolean;
@@ -17,6 +18,8 @@
     onOpacity: (value: number) => void;
     onClose: () => void;
   }
+
+  import { runsInTauri } from "$lib/store";
 
   let { open, hasMaterial, opacity, onOpacity, onClose }: Props = $props();
 
@@ -75,6 +78,10 @@
           {/if}
         </p>
       </div>
+
+      {#if runsInTauri()}
+        <UpdateSection />
+      {/if}
     </div>
   </div>
 {/if}

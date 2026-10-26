@@ -1,0 +1,24 @@
+{
+  "comment": "Golden transitions adjudicating the TS and Rust state machines. `from` + `to` with `allowed: true` must be accepted; `false` must be rejected.",
+  "transitions": [
+    { "from": "stopped", "to": "starting", "allowed": true },
+    { "from": "stopped", "to": "running", "allowed": false },
+    { "from": "starting", "to": "running", "allowed": true },
+    { "from": "starting", "to": "failed", "allowed": true },
+    { "from": "starting", "to": "stopping", "allowed": true },
+    { "from": "starting", "to": "starting", "allowed": false },
+    { "from": "running", "to": "degraded", "allowed": true },
+    { "from": "running", "to": "stopping", "allowed": true },
+    { "from": "running", "to": "failed", "allowed": true },
+    { "from": "running", "to": "starting", "allowed": false },
+    { "from": "degraded", "to": "running", "allowed": true },
+    { "from": "degraded", "to": "stopping", "allowed": true },
+    { "from": "degraded", "to": "failed", "allowed": true },
+    { "from": "failed", "to": "starting", "allowed": true },
+    { "from": "failed", "to": "stopped", "allowed": true },
+    { "from": "failed", "to": "running", "allowed": false },
+    { "from": "stopping", "to": "stopped", "allowed": true },
+    { "from": "stopping", "to": "failed", "allowed": true },
+    { "from": "stopping", "to": "running", "allowed": false }
+  ]
+}

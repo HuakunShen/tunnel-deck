@@ -12,6 +12,6 @@
 <plist version="1.0">
   <dict>
     <key>NSLocalNetworkUsageDescription</key>
-    <string>SSH Tunnel connects to the SSH hosts on your local network that your tunnels point at.</string>
+    <string>TunnelDeck connects to the SSH hosts on your local network that your tunnels point at.</string>
   </dict>
 </plist>

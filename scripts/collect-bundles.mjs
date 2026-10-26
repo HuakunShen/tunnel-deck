@@ -4,10 +4,10 @@
  * it is.
  *
  * Tauri names artifacts after the product in the native installer's own style
- * (`SSH Tunnel_0.1.3_aarch64.dmg`, `SSH Tunnel_0.1.3_x64-setup.exe`), which
+ * (`TunnelDeck_0.1.3_aarch64.dmg`, `TunnelDeck_0.1.3_x64-setup.exe`), which
  * leaves a download page where every file has a different shape and nothing
  * names the platform. This copies them to
- * `SSH-Tunnel-<version>-<label><suffix>` so the release assets read as one set.
+ * `TunnelDeck-<version>-<label><suffix>` so the release assets read as one set.
  *
  * Usage: `node scripts/collect-bundles.mjs --label macos-arm64 --version 0.1.3 [--target aarch64-apple-darwin] [--out dist]`
  */
@@ -26,6 +26,37 @@ const SUFFIX = {
   // NSIS writes an installer, not the app, so say so.
   ".exe": "-setup",
 };
+
+/**
+ * Updater payloads, matched by filename tail. Only macOS wraps its bundle
+ * (`.app.tar.gz`); the v2 updater installs AppImage, deb, nsis and msi
+ * directly, so those entries ARE the installer files (byte-identical to the
+ * friendly downloads — copied twice under two names would be waste, see
+ * below). Renaming is safe: the `.sig` signs the file bytes, never the name,
+ * and `latest.json` points at the renamed files.
+ *
+ * Each entry maps a filename tail to the release-name suffix. Single-file
+ * payloads whose friendly name already matches (`-setup.exe`, `.AppImage`)
+ * are collected once, under the friendly name, and the feed points there.
+ */
+const UPDATER = [
+  [".app.tar.gz", ".app.tar.gz"],
+  [".AppImage", ".AppImage"],
+  ["-setup.exe", "-setup.exe"],
+];
+
+function updaterName(file) {
+  for (const [tail, suffix] of UPDATER) {
+    if (file.endsWith(tail)) return suffix;
+  }
+  if (file.endsWith(".sig")) {
+    const withoutSig = file.slice(0, -".sig".length);
+    for (const [tail, suffix] of UPDATER) {
+      if (withoutSig.endsWith(tail)) return `${suffix}.sig`;
+    }
+  }
+  return undefined;
+}
 
 function arg(name, fallback) {
   const index = process.argv.indexOf(`--${name}`);
@@ -76,9 +107,23 @@ function walk(dir, found = []) {
 mkdirSync(outDir, { recursive: true });
 const copied = [];
 for (const path of walk(bundleRoot)) {
+  const file = basename(path);
+  const updateSuffix = updaterName(file);
+  if (updateSuffix !== undefined) {
+    // The updater payload rides along only when the build signed it: without
+    // the key there is a binary but no `.sig`, and an unsigned update feed
+    // is worse than none. (The friendly download below is unaffected — it
+    // never needs a signature.)
+    const sig = updateSuffix.endsWith(".sig") ? path : `${path}.sig`;
+    if (existsSync(sig)) {
+      const name = `TunnelDeck-${version}-${label}${updateSuffix}`;
+      copyFileSync(path, join(outDir, name));
+      copied.push(name);
+    }
+  }
   const suffix = SUFFIX[extname(path).toLowerCase()];
   if (suffix === undefined) continue;
-  const name = `SSH-Tunnel-${version}-${label}${suffix}${extname(path)}`;
+  const name = `TunnelDeck-${version}-${label}${suffix}${extname(path)}`;
   copyFileSync(path, join(outDir, name));
   copied.push(name);
 }

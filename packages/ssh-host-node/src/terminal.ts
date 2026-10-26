@@ -217,7 +217,7 @@ const windowsTargets: readonly TerminalTarget[] = [
     hint: "wt.exe",
     platform: "win32",
     command: "wt.exe",
-    argvFor: (cmd) => ["new-tab", "--title", "SSH Tunnel", "cmd.exe", "/c", cmd],
+    argvFor: (cmd) => ["new-tab", "--title", "TunnelDeck", "cmd.exe", "/c", cmd],
   },
   {
     id: "powershell",

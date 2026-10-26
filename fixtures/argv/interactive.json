@@ -1,0 +1,15 @@
+{
+  "name": "interactive shell drops BatchMode and -N",
+  "profile": {
+    "id": "t-test",
+    "name": "test",
+    "mode": "local",
+    "sshTarget": "ufo",
+    "forwards": [{ "kind": "local", "bindPort": 18080, "targetHost": "127.0.0.1", "targetPort": 80 }],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  "options": { "interactive": true },
+  "mustContain": ["-L", "ufo"],
+  "mustNotContain": ["BatchMode=yes", "-N"]
+}

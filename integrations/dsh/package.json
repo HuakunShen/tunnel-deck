@@ -6,7 +6,7 @@
   "license": "MIT",
   "icon": "./icon.svg",
   "meta": {
-    "title": "SSH Tunnel",
+    "title": "TunnelDeck",
     "description": "One-click SSH tunnels: remember every forward, start/stop from a panel."
   },
   "exports": {

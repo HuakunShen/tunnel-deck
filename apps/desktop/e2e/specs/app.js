@@ -1,15 +1,15 @@
 /**
  * Desktop e2e: the bundled app opens its window and renders the tunnel
- * console. The shell attaches to a running daemon when one answers on
- * :7432, so these specs need the daemon up (the dev loop always has it).
+ * console. The manager is linked in-process, so these specs need nothing
+ * beyond the app itself.
  */
-describe("SSH Tunnel desktop app", () => {
-  it("opens the main window titled SSH Tunnel", async () => {
+describe("TunnelDeck desktop app", () => {
+  it("opens the main window titled TunnelDeck", async () => {
     await browser.waitUntil(
-      async () => (await browser.getTitle()).includes("SSH Tunnel"),
-      { timeout: 30000, timeoutMsg: "main window never titled SSH Tunnel" },
+      async () => (await browser.getTitle()).includes("TunnelDeck"),
+      { timeout: 30000, timeoutMsg: "main window never titled TunnelDeck" },
     );
-    expect(await browser.getTitle()).toContain("SSH Tunnel");
+    expect(await browser.getTitle()).toContain("TunnelDeck");
   });
 
   it("renders the console shell: toolbar, sidebar, content", async () => {

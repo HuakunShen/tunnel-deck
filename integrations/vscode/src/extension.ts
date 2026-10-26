@@ -19,7 +19,7 @@ function daemonUrl(): string {
 }
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-  const output = vscode.window.createOutputChannel("SSH Tunnel");
+  const output = vscode.window.createOutputChannel("TunnelDeck");
   context.subscriptions.push(output);
 
   let running: RunningDaemon | null = null;
@@ -31,7 +31,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     output.appendLine(`daemon: ${running.readiness.url} (${running.readiness.serviceInstanceId})`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    void vscode.window.showErrorMessage(`SSH Tunnel: ${message}`);
+    void vscode.window.showErrorMessage(`TunnelDeck: ${message}`);
     output.appendLine(`daemon failed: ${message}`);
   }
   if (running?.owned === true) {
@@ -58,7 +58,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       await provider.refresh();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      void vscode.window.showErrorMessage(`SSH Tunnel: ${message}`);
+      void vscode.window.showErrorMessage(`TunnelDeck: ${message}`);
     }
   }
 
@@ -93,7 +93,7 @@ async function pickRow(
   if (row?.profile !== undefined) return row;
   const rows = provider.getChildren();
   if (rows.length === 0) {
-    void vscode.window.showInformationMessage("SSH Tunnel: no tunnels yet — open the workbench to add one.");
+    void vscode.window.showInformationMessage("TunnelDeck: no tunnels yet — open the workbench to add one.");
     return undefined;
   }
   const picked = await vscode.window.showQuickPick(
@@ -110,7 +110,7 @@ async function pickRow(
 function openWorkbench(context: vscode.ExtensionContext, url: string): void {
   const panel = vscode.window.createWebviewPanel(
     "sshTunnelWorkbench",
-    "SSH Tunnel",
+    "TunnelDeck",
     vscode.ViewColumn.One,
     { enableScripts: true, retainContextWhenHidden: true },
   );

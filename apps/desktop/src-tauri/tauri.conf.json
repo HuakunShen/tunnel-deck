@@ -1,11 +1,11 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "SSH Tunnel",
+  "productName": "TunnelDeck",
   "version": "0.1.3",
-  "identifier": "dev.sshtunnel.ui",
+  "identifier": "dev.tunneldeck.app",
   "build": {
     "frontendDist": "../../web/dist",
-    "devUrl": "http://127.0.0.1:7432",
+    "devUrl": "http://127.0.0.1:5173",
     "beforeDevCommand": "",
     "beforeBuildCommand": ""
   },
@@ -14,7 +14,7 @@
       {
         "label": "main",
         "create": false,
-        "title": "SSH Tunnel",
+        "title": "TunnelDeck",
         "width": 1080,
         "height": 760,
         "minWidth": 800,
@@ -27,7 +27,7 @@
     ],
     "withGlobalTauri": false,
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:7432; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ipc: http://ipc.localhost; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
     }
   },
   "bundle": {
@@ -35,6 +35,7 @@
     "targets": [
       "app"
     ],
+    "createUpdaterArtifacts": true,
     "category": "Utility",
     "shortDescription": "One-click SSH tunnel manager.",
     "icon": [
@@ -45,9 +46,18 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": [
-      "../../server/dist/server.mjs",
-      "../../web/dist"
-    ]
+    "macOS": {
+      "signingIdentity": "-"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "dialog": false,
+      "endpoints": [
+        "https://github.com/HuakunShen/tunnel-deck/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERCMDJBMUE2REU3OUE5N0EKUldSNnFYbmVwcUVDMjVaVW9VMnBSZlJVWG9DNFdBMUdkUWNJNHdiRmtORlRwN2R1Zm13TGlPOEYK"
+    }
   }
 }

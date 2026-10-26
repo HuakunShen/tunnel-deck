@@ -1,0 +1,15 @@
+{
+  "name": "remote forward",
+  "profile": {
+    "id": "t-test",
+    "name": "test",
+    "mode": "remote",
+    "sshTarget": "ufo",
+    "forwards": [{ "kind": "remote", "bindPort": 19090, "targetHost": "127.0.0.1", "targetPort": 3000 }],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  "options": {},
+  "mustContain": ["-R", "19090:127.0.0.1:3000", "-N"],
+  "mustNotContain": ["-L"]
+}

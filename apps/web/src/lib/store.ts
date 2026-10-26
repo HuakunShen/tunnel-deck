@@ -6,7 +6,7 @@
  * the contract. Polling is centralized (one interval) to avoid N components
  * hammering `/api/states`.
  */
-import { createTunnelClient, type TunnelClient } from "@ssh-tunnel/client";
+import { createInvokeTunnelClient, createTunnelClient, type TunnelClient } from "@ssh-tunnel/client";
 import type {
   LaunchMode,
   LogTail,
@@ -27,17 +27,40 @@ export type {
   TerminalTarget,
 };
 
+declare global {
+  interface Window {
+    __TAURI_INTERNALS__?: {
+      invoke: <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
+    };
+    __nativeHost?: {
+      apply: (backdrop: string) => void;
+    };
+  }
+}
+
+/**
+ * True inside the Tauri shell, where the manager is linked in-process (and
+ * where the updater bridge exists). A browser tab has neither.
+ */
+export function runsInTauri(): boolean {
+  try {
+    return window.__TAURI_INTERNALS__?.invoke !== undefined;
+  } catch {
+    return false;
+  }
+}
+
 function baseUrl(): string {
   // Same-origin when served by the daemon; `?daemon=` override for dev
   // (`vite dev --port 5173` against a daemon on 7432).
   try {
     const override = new URLSearchParams(window.location.search).get("daemon");
     if (override !== null && override !== "") return override.replace(/\/$/, "");
-    // Inside the Tauri shell the page runs on `tauri://localhost`, where a
-    // relative `/api/*` would hit the asset protocol instead of the daemon.
-    // Same for the VS Code webview (`vscode-webview://`). Default to the
-    // loopback daemon the host spawns (or attaches to).
-    if (window.location.protocol === "tauri:" || window.location.protocol === "vscode-webview:") {
+    // Inside the VS Code webview (`vscode-webview://`) a relative `/api/*`
+    // would hit the asset protocol instead of the daemon. Default to the
+    // loopback daemon the host spawns (or attaches to). Tauri never reaches
+    // here: it talks to the in-process manager over IPC (see `getClient`).
+    if (window.location.protocol === "vscode-webview:") {
       return "http://127.0.0.1:7432";
     }
   } catch {
@@ -50,6 +73,13 @@ let client: TunnelClient | null = null;
 
 export function getClient(): TunnelClient {
   if (client === null) {
+    if (runsInTauri()) {
+      const invoke = window.__TAURI_INTERNALS__?.invoke;
+      if (invoke !== undefined) {
+        client = createInvokeTunnelClient((cmd, args) => invoke<unknown>(cmd, args));
+        return client;
+      }
+    }
     client = createTunnelClient({ baseUrl: baseUrl(), fetch });
   }
   return client;

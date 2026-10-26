@@ -15,8 +15,11 @@
     "@lucide/svelte": "catalog:",
     "@ssh-tunnel/client": "workspace:*",
     "@ssh-tunnel/contract": "workspace:*",
+    "@ssh-tunnel/core": "workspace:*",
     "@ssh-tunnel/web-ui": "workspace:*",
-    "@ssh-tunnel/core": "workspace:*"
+    "@tauri-apps/api": "^2.12.4",
+    "@tauri-apps/plugin-process": "^2.4.0",
+    "@tauri-apps/plugin-updater": "^2.14.0"
   },
   "devDependencies": {
     "@ssh-tunnel/build-helper": "workspace:*",

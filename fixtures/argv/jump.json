@@ -1,0 +1,16 @@
+{
+  "name": "jump hops combined with forwards",
+  "profile": {
+    "id": "t-test",
+    "name": "test",
+    "mode": "jump",
+    "sshTarget": "inner",
+    "jumpHops": ["bastion", "inner:2222"],
+    "forwards": [{ "kind": "local", "bindPort": 18080, "targetHost": "127.0.0.1", "targetPort": 80 }],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  "options": {},
+  "mustContain": ["-J", "bastion,inner:2222", "-L"],
+  "mustNotContain": []
+}

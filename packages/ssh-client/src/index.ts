@@ -203,3 +203,114 @@ export function createTunnelClient(options: TunnelClientOptions): {
 }
 
 export type TunnelClient = ReturnType<typeof createTunnelClient>;
+
+/**
+ * Invoke function injected by the host. The Tauri internals `invoke` entry
+ * qualifies; so does any test double with the same shape. Host-free: this
+ * package never names Tauri itself.
+ */
+export type InvokeFn = (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
+
+/**
+ * The same typed client over Tauri IPC instead of HTTP. Command names mirror
+ * the daemon routes 1:1 (`tunnel_list_profiles` for `GET /api/profiles`,
+ * …), responses are validated against the same contract, and failures arrive
+ * as the same `{ code, message, retryable }` problem — so a front cannot tell
+ * which transport it runs on.
+ */
+export function createInvokeTunnelClient(invoke: InvokeFn): TunnelClient {
+  async function call<T>(
+    cmd: string,
+    args: Record<string, unknown> | undefined,
+    parse: (body: unknown) => T,
+  ): Promise<T> {
+    let body: unknown;
+    try {
+      body = await invoke(cmd, args);
+    } catch (error) {
+      throw problemToError(error);
+    }
+    try {
+      return parse(body);
+    } catch {
+      const code: TunnelProblemCode = "InternalError";
+      throw new TunnelError(code, "host response failed validation");
+    }
+  }
+  return {
+    health: () =>
+      call("tunnel_health", undefined, (body) =>
+        must(healthResponseSchema.loose().safeParse(body)),
+      ),
+    listProfiles: () =>
+      call("tunnel_list_profiles", undefined, (body) =>
+        must(profileListResponseSchema.loose().safeParse(body)).profiles,
+      ),
+    createProfile: (input) =>
+      call("tunnel_create_profile", { input }, (body) =>
+        must(tunnelProfileSchema.loose().safeParse(body)),
+      ),
+    getProfile: (id) =>
+      call("tunnel_get_profile", { id }, (body) =>
+        must(tunnelProfileSchema.loose().safeParse(body)),
+      ),
+    updateProfile: (id, input) =>
+      call("tunnel_update_profile", { id, input }, (body) =>
+        must(tunnelProfileSchema.loose().safeParse(body)),
+      ),
+    deleteProfile: async (id): Promise<void> => {
+      await call("tunnel_delete_profile", { id }, () => undefined);
+    },
+    preview: (id) =>
+      call("tunnel_preview", { id }, (body) =>
+        must(previewResponseSchema.loose().safeParse(body)),
+      ),
+    listStates: () =>
+      call("tunnel_list_states", undefined, (body) =>
+        must(stateListResponseSchema.loose().safeParse(body)).states,
+      ),
+    getState: (id) =>
+      call("tunnel_get_state", { id }, (body) =>
+        must(tunnelStateSchema.loose().safeParse(body)),
+      ),
+    start: (id) =>
+      call("tunnel_start", { id }, (body) =>
+        must(tunnelStateSchema.loose().safeParse(body)),
+      ),
+    stop: (id) =>
+      call("tunnel_stop", { id }, (body) =>
+        must(tunnelStateSchema.loose().safeParse(body)),
+      ),
+    stopAll: () =>
+      call("tunnel_stop_all", undefined, (body) =>
+        must(stateListResponseSchema.loose().safeParse(body)).states,
+      ),
+    probe: (id) =>
+      call("tunnel_probe", { id }, (body) =>
+        must(tunnelStateSchema.loose().safeParse(body)),
+      ),
+    listHosts: () =>
+      call("tunnel_list_hosts", undefined, (body) =>
+        must(hostListResponseSchema.loose().safeParse(body)).hosts,
+      ),
+    listTerminals: () =>
+      call("tunnel_list_terminals", undefined, (body) =>
+        must(terminalListResponseSchema.loose().safeParse(body)).terminals,
+      ),
+    getLog: (id, tail) =>
+      call("tunnel_log_tail", { id, tail }, (body) =>
+        must(logTailResponseSchema.loose().safeParse(body)),
+      ),
+    launchInTerminal: (id, terminalId, mode) =>
+      call("tunnel_launch_in_terminal", { id, terminalId, mode }, (body) =>
+        must(launchResponseSchema.loose().safeParse(body)),
+      ),
+    openUrl: (url) =>
+      call("tunnel_open_url", { url }, (body) =>
+        must(openUrlResponseSchema.loose().safeParse(body)),
+      ),
+    closeSession: async (id): Promise<void> => {
+      await call("tunnel_close_session", { id }, () => undefined);
+    },
+  };
+}

@@ -1,0 +1,27 @@
+# `tunnel-core` — the portable tunnel domain, host-free.
+#
+# Pure data + transitions + argv planning. Process supervision, TCP probing,
+# and file persistence arrive as injected traits from the composition root
+# (Tauri shell, CLI, or tests), so this crate compiles in seconds and never
+# names a WebView, tokio, or HTTP server.
+[package]
+name = "tunnel-core"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.77"
+license = "MIT"
+publish = false
+
+[lib]
+name = "tunnel_core"
+path = "src/lib.rs"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+libc.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
