@@ -196,30 +196,37 @@ jobs:
         working-directory: apps/desktop/src-tauri
         run: cargo build
 
-      - name: Launch the desktop app and wait for its daemon
+      # The shell links `tunnel-core` in-process: no sidecar and no loopback
+      # port, so there is no daemon to ask. What a launch can still prove is that
+      # the binary starts, builds its webview and window, and is *still running*
+      # after the setup path has finished — a panic or a failed webview init
+      # ends the process well inside the wait below.
+      - name: Launch the desktop app and check it stays up
         shell: bash
         run: |
           export HOME="$RUNNER_TEMP/desktop-home" USERPROFILE="$RUNNER_TEMP/desktop-home"
           mkdir -p "$HOME"
           cd apps/desktop/src-tauri
+          log="$RUNNER_TEMP/desktop.log"
           if [ "$RUNNER_OS" = "Windows" ]; then
-            ./target/debug/ssh-tunnel-desktop.exe &
+            ./target/debug/ssh-tunnel-desktop.exe >"$log" 2>&1 &
           else
-            xvfb-run -a ./target/debug/ssh-tunnel-desktop &
+            xvfb-run -a ./target/debug/ssh-tunnel-desktop >"$log" 2>&1 &
           fi
-          ok=0
-          for i in $(seq 1 60); do
-            if curl -fs http://127.0.0.1:7432/api/health; then ok=1; break; fi
-            sleep 1
-          done
-          [ "$ok" = 1 ] || { echo "the desktop app never started its daemon"; exit 1; }
-          curl -fs http://127.0.0.1:7432/ | grep -qi "<html"
-          # The shell must still be alive, not a daemon left by a crashed window.
+          pid=$!
+          sleep 25
+          if ! kill -0 "$pid" 2>/dev/null; then
+            echo "the desktop app exited during startup"; cat "$log"; exit 1
+          fi
+          if grep -qi "panicked" "$log"; then
+            echo "the desktop app panicked"; cat "$log"; exit 1
+          fi
           if [ "$RUNNER_OS" = "Windows" ]; then
             tasklist | grep -i ssh-tunnel-desktop
           else
             pgrep -f target/debug/ssh-tunnel-desktop
           fi
+          cat "$log"
 
   # The one thing no unit test can say: that a profile really becomes a working
   # tunnel. A real `sshd` runs on the runner, the daemon starts a tunnel to
