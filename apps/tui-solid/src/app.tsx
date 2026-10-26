@@ -75,7 +75,7 @@ function ListScreen(props: { model: TunnelModel }): JSX.Element {
       <Show when={model.error() !== null}>
         <Text color="red">{model.error() ?? ""}</Text>
       </Show>
-      <StatusBar items={[{ label: model.busy() ? "working…" : "ssh-tunnel", keyHint: model.notice() }]} />
+      <StatusBar items={[{ label: model.busy() ? "working…" : "TunnelDeck", keyHint: model.notice() }]} />
     </Box>
   );
 }

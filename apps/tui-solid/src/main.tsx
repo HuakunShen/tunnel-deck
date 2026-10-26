@@ -1,10 +1,10 @@
 /**
- * `ssh-tunnel-tui-solid` — terminal front over the daemon API, authored in
+ * `tunneldeck-tui` — terminal front over the daemon API, authored in
  * Solid on the Uniview TUI engine. Pure JavaScript (no native binding), so the
  * same bundle runs on macOS, Linux and Windows. Mounts once; signal writes
  * drive every later frame.
  *
- *   ssh-tunnel-tui-solid [--daemon=http://127.0.0.1:7432]
+ *   tunneldeck-tui [--daemon=http://127.0.0.1:7432]
  */
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";

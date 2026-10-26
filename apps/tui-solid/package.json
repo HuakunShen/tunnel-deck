@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "bin": {
-    "ssh-tunnel-tui-solid": "./dist/main.js"
+    "tunneldeck-tui": "./dist/main.js"
   },
   "scripts": {
     "check": "tsc --noEmit -p tsconfig.json",

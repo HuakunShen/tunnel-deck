@@ -131,7 +131,7 @@ failure.
 
 - `ssh-tunnel` (`apps/cli`) — scriptable commands: `list`, `add`, `start`,
   `stop`, `logs`, `probe`, …; `--direct` runs without a daemon.
-- `ssh-tunnel-tui-solid` (`apps/tui-solid`) — full-screen console on the
+- `tunneldeck-tui` (`apps/tui-solid`) — TunnelDeck's full-screen console on the
   [Uniview](https://github.com/HuakunShen/uniview) TUI engine with Solid
   (`pnpm tui:solid`). Pure JavaScript, no native binding, so it runs the same
   on macOS, Linux and Windows. Keys: ↑↓/jk select, enter start/stop, p probe,

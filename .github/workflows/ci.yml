@@ -222,7 +222,7 @@ jobs:
           fi
 
   # The one thing no unit test can say: that a profile really becomes a working
-  # SSH tunnel. A real `sshd` runs on the runner, the daemon starts a tunnel to
+  # tunnel. A real `sshd` runs on the runner, the daemon starts a tunnel to
   # it, and traffic crosses it and comes back.
   tunnel:
     name: tunnel — ${{ matrix.os }}
