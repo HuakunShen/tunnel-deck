@@ -52,7 +52,7 @@ function runControl(
     const child = spawn(
       sshPath,
       ["-o", "BatchMode=yes", "-S", socketPath, "-O", action, destination],
-      { stdio: "ignore" },
+      { stdio: "ignore", windowsHide: true },
     );
     const timer = setTimeout(() => {
       // A wedged socket: report "not there" rather than blocking the caller.

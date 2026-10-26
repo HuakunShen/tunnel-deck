@@ -7,12 +7,11 @@ import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { TunnelError } from "@ssh-tunnel/contract";
 import { tunnelProfileSchema, type TunnelProfile } from "@ssh-tunnel/contract";
+import { dataDir } from "./paths.js";
 import type { StorePort } from "./ports.js";
 
 function defaultStorePath(): string {
-  const home =
-    process.env["HOME"] ?? process.env["USERPROFILE"] ?? process.cwd();
-  return join(home, ".ssh-tunnel-ui", "profiles.json");
+  return join(dataDir(), "profiles.json");
 }
 
 export function createFileStorePort(

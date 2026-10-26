@@ -7,7 +7,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 import { executableNames, whichOnPath } from "@ssh-tunnel/host-node";
 
 const created: string[] = [];
@@ -44,10 +44,13 @@ describe("whichOnPath", () => {
   it("finds an executable in a later PATH entry", () => {
     const empty = tempDir();
     const dir = tempDir();
-    writeFileSync(join(dir, "node"), "#!/bin/sh\n", { mode: 0o755 });
-    expect(whichOnPath("node", { platform: "darwin", pathValue: `${empty}:${dir}` })).toBe(
-      join(dir, "node"),
-    );
+    // Host-shaped on purpose: a Windows temp path holds `C:`, which a `:`
+    // separator would split, and its executables carry an extension.
+    const name = process.platform === "win32" ? "node.exe" : "node";
+    writeFileSync(join(dir, name), "#!/bin/sh\n", { mode: 0o755 });
+    expect(
+      whichOnPath("node", { platform: process.platform, pathValue: [empty, dir].join(delimiter) }),
+    ).toBe(join(dir, name));
   });
 
   it("splits Windows PATH on semicolons and looks for node.exe", () => {

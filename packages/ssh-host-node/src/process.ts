@@ -22,6 +22,8 @@ export function createNodeProcessPort(sshPath = "ssh"): ProcessPort {
       }
       const child = spawn(sshPath, [...argv], {
         detached: true,
+        // Windows would otherwise open a console window per tunnel.
+        windowsHide: true,
         stdio: ["ignore", outFd, errFd],
       });
       const pid = child.pid ?? -1;

@@ -34,9 +34,10 @@ function darwinCommand(url: string): { readonly file: string; readonly args: rea
 }
 
 function windowsCommand(url: string): { readonly file: string; readonly args: readonly string[] } {
-  // `start` is a cmd builtin, so the empty string is the window title. The
-  // `""`-prefixed form keeps cmd from treating the URL as its own option.
-  return { file: "cmd.exe", args: ["/c", "start", "", url] };
+  // Not `cmd /c start`: cmd re-parses its command line, so a `&` in a query
+  // string would end the command and run whatever follows it. The URL handler
+  // takes the address as one argument and never goes through a shell.
+  return { file: "rundll32.exe", args: ["url.dll,FileProtocolHandler", url] };
 }
 
 export function createOpenUrlPort(): OpenUrlPort {
@@ -56,11 +57,12 @@ export function createOpenUrlPort(): OpenUrlPort {
         // The handler outlives the request; never let it hold the daemon open.
         detached: true,
         stdio: "ignore",
+        windowsHide: true,
       });
       child.unref();
-      child.on("error", (error: Error) => {
-        throw error;
-      });
+      // A missing `xdg-open` reports asynchronously; throwing from this
+      // listener would be an uncaught exception that takes the daemon down.
+      child.on("error", () => undefined);
     },
   };
 }

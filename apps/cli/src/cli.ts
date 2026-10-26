@@ -7,6 +7,7 @@ import {
   createNodeProbePort,
   createNodeProcessPort,
   createFileStorePort,
+  dataDir,
   systemClock,
 } from "@ssh-tunnel/host-node";
 import { createTunnelClient } from "@ssh-tunnel/client";
@@ -16,17 +17,13 @@ import { profileInputSchema } from "@ssh-tunnel/contract";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-function homeDir(): string {
-  return process.env["HOME"] ?? process.env["USERPROFILE"] ?? process.cwd();
-}
-
 function daemonBase(): string {
   // `ssh-tunnel --daemon=http://x` overrides; else the discovery file; else default.
   for (const arg of process.argv.slice(2)) {
     if (arg.startsWith("--daemon=")) return arg.slice("--daemon=".length).replace(/\/$/, "");
   }
   try {
-    const raw = readFileSync(join(homeDir(), ".ssh-tunnel-ui", "daemon.json"), "utf8");
+    const raw = readFileSync(join(dataDir(), "daemon.json"), "utf8");
     const parsed = JSON.parse(raw) as { host?: unknown; port?: unknown };
     if (typeof parsed.host === "string" && typeof parsed.port === "number") {
       return `http://${parsed.host}:${parsed.port}`;
@@ -38,7 +35,7 @@ function daemonBase(): string {
 }
 
 async function directManager(): Promise<TunnelManager> {
-  const base = join(homeDir(), ".ssh-tunnel-ui");
+  const base = dataDir();
   return new TunnelManager({
     process: createNodeProcessPort(),
     probe: createNodeProbePort(),

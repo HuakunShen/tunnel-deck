@@ -5,8 +5,9 @@
  * rest at spawn time. Never throws: any I/O problem yields `[]`.
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, isAbsolute, join } from "node:path";
 import type { SshHostInfo } from "@ssh-tunnel/contract";
+import { userHome } from "./paths.js";
 
 interface ConfigBlock {
   readonly patterns: readonly string[];
@@ -118,7 +119,7 @@ function simpleGlob(pattern: string): string[] {
 
 /** Read aliases from `~/.ssh/config` (plus one Include level, no recursion). */
 export function readSshConfigHosts(
-  home: string = process.env["HOME"] ?? process.cwd(),
+  home: string = userHome(),
 ): SshHostInfo[] {
   try {
     const main = join(home, ".ssh", "config");
@@ -130,7 +131,7 @@ export function readSshConfigHosts(
     while ((includeMatch = includeRegex.exec(mainText)) !== null) {
       for (const piece of (includeMatch[1] ?? "").trim().split(/\s+/)) {
         if (piece === "") continue;
-        const expanded = piece.startsWith("/")
+        const expanded = isAbsolute(piece)
           ? piece
           : piece.startsWith("~/")
             ? join(home, piece.slice(2))

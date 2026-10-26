@@ -22,20 +22,17 @@ import {
   createNodeProbePort,
   createNodeProcessPort,
   systemClock,
+  dataDir,
 } from "@ssh-tunnel/host-node";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-
-function homeDir(): string {
-  return process.env["HOME"] ?? process.env["USERPROFILE"] ?? process.cwd();
-}
 
 function daemonBase(): string {
   for (const arg of process.argv.slice(2)) {
     if (arg.startsWith("--daemon=")) return arg.slice("--daemon=".length).replace(/\/$/, "");
   }
   try {
-    const raw = readFileSync(join(homeDir(), ".ssh-tunnel-ui", "daemon.json"), "utf8");
+    const raw = readFileSync(join(dataDir(), "daemon.json"), "utf8");
     const parsed = JSON.parse(raw) as { host?: unknown; port?: unknown };
     if (typeof parsed.host === "string" && typeof parsed.port === "number") {
       return `http://${parsed.host}:${parsed.port}`;
@@ -193,7 +190,7 @@ function App(props: { client: TunnelClient | null; manager: TunnelManager | null
 
 async function main(): Promise<void> {
   const direct = process.argv.slice(2).includes("--direct");
-  const base = join(homeDir(), ".ssh-tunnel-ui");
+  const base = dataDir();
   const manager = direct
     ? new TunnelManager({
         process: createNodeProcessPort(),

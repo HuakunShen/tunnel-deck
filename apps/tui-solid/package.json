@@ -1,0 +1,27 @@
+{
+  "name": "@ssh-tunnel/tui-solid",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "tunneldeck-tui": "./dist/main.js"
+  },
+  "scripts": {
+    "check": "tsc --noEmit -p tsconfig.json",
+    "build": "vite build",
+    "start": "node dist/main.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ssh-tunnel/client": "workspace:*",
+    "@ssh-tunnel/contract": "workspace:*",
+    "@uniview/tui-core": "catalog:",
+    "@uniview/tui-solid": "catalog:",
+    "solid-js": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

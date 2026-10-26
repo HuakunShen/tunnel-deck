@@ -14,14 +14,14 @@
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
+import { dataDir } from "./paths.js";
 import type { RuntimeRecord, RuntimeStorePort } from "./ports.js";
 
 const ORIGINS = new Set(["managed", "terminal"]);
 const MODES = new Set(["tunnel", "shell"]);
 
 function defaultRuntimePath(): string {
-  const home = process.env["HOME"] ?? process.env["USERPROFILE"] ?? process.cwd();
-  return join(home, ".ssh-tunnel-ui", "runtime.json");
+  return join(dataDir(), "runtime.json");
 }
 
 /** Keep only entries that still look like a record; a drifted file is dropped. */

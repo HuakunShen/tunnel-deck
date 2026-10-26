@@ -15,6 +15,7 @@ import {
   createFileStorePort,
   createOpenUrlPort,
   createTerminalPort,
+  dataDir,
   systemClock,
 } from "@ssh-tunnel/host-node";
 import { TunnelManager } from "./manager.js";
@@ -39,13 +40,8 @@ const MIME: Record<string, string> = {
   ".ico": "image/x-icon",
 };
 
-function homeDir(): string {
-  return process.env["HOME"] ?? process.env["USERPROFILE"] ?? process.cwd();
-}
-
 export async function startDaemon(options: ServeOptions = {}): Promise<{ port: number; instanceId: string }> {
-  const home = homeDir();
-  const base = join(home, ".ssh-tunnel-ui");
+  const base = dataDir();
   const storePath = options.storePath ?? join(base, "profiles.json");
   const logDir = options.logDir ?? join(base, "logs");
   // Only create directories we actually use: an explicit --store/--log-dir

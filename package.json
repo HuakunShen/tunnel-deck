@@ -16,6 +16,7 @@
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "serve": "node apps/server/dist/server.mjs",
     "tui": "node apps/tui/dist/tui.mjs",
+    "tui:solid": "node apps/tui-solid/dist/main.js",
     "format": "prettier --write \"**/*.{ts,tsx,md,json,yaml}\"",
     "test:ci": "vitest run --exclude 'apps/tui/**'"
   },
