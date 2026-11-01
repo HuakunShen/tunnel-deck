@@ -71,7 +71,7 @@ export interface TunnelProblemResponse {
 /** Code-carrying error thrown inside the service/host layers. */
 export class TunnelError extends Error {
   readonly code: TunnelProblemCode;
-  readonly details?: Readonly<Record<string, string | number | boolean>>;
+  readonly details?: Readonly<Record<string, string | number | boolean>> | undefined;
   readonly retryable: boolean;
 
   constructor(
